@@ -116,4 +116,11 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation(project(':react-native-bluetooth-escpos-printer')) {
+        exclude group: 'com.android.support', module: 'support-compat'
+    }
+
 }
+
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
