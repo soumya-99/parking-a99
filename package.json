@@ -22,6 +22,7 @@
     "react-native": "0.78.1",
     "react-native-ble-manager": "^12.1.4",
     "react-native-bluetooth-escpos-printer": "^0.0.5",
+    "react-native-canvas": "^0.1.40",
     "react-native-date-picker": "^5.0.11",
     "react-native-device-info": "^14.0.4",
     "react-native-element-dropdown": "^2.12.4",
