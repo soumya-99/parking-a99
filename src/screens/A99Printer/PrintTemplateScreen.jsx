@@ -139,8 +139,20 @@ const PrintTemplateScreen = () => {
                       console.log(msg);
                     });
                   }
-                  navigation.dispatch(CommonActions.navigate('ReceiptScreen'));
+                  // navigation.dispatch(CommonActions.navigate('ReceiptScreen'));
                   // navigation.dispatch(CommonActions.goBack());
+                  navigation.dispatch(
+                    CommonActions.reset({
+                      index: 0,
+                      routes: [
+                        {name: 'ReceiptScreen'},
+                        {name: 'OutpassScreenMain'},
+                      ],
+                    }),
+                  );
+                  navigation.navigate('Receipt_Navigation', {
+                    screen: 'ReceiptScreen',
+                  });
                 });
               })
               .catch(error => {
