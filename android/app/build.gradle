@@ -105,6 +105,11 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }
 }
 
 dependencies {
@@ -120,6 +125,16 @@ dependencies {
     implementation(project(':react-native-bluetooth-escpos-printer')) {
         exclude group: 'com.android.support', module: 'support-compat'
     }
+
+    implementation project(':react-native-vector-icons')
+
+    implementation("androidx.core:core:1.9.0") {
+        exclude group: 'com.android.support', module: 'support-compat'
+    }
+
+    implementation(name: 'ezetapandroidsdk-release-3.24_64', ext: 'aar')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.0"
+    implementation "androidx.appcompat:appcompat:1.2.0"
 
 }
 

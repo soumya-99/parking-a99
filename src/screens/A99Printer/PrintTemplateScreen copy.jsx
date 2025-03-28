@@ -9,11 +9,6 @@ import {
 import {CommonActions, useNavigation, useRoute} from '@react-navigation/native';
 import Canvas from 'react-native-canvas';
 import RNFS from 'react-native-fs';
-import {WebView} from 'react-native-webview';
-
-if (!Canvas.WebView) {
-  Canvas.WebView = WebView;
-}
 
 const PrintTemplateScreen = () => {
   const navigation = useNavigation();
@@ -139,8 +134,7 @@ const PrintTemplateScreen = () => {
                       console.log(msg);
                     });
                   }
-                  navigation.dispatch(CommonActions.navigate('ReceiptScreen'));
-                  // navigation.dispatch(CommonActions.goBack());
+                  navigation.dispatch(CommonActions.goBack());
                 });
               })
               .catch(error => {

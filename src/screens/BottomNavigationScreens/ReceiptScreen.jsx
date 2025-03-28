@@ -8,28 +8,32 @@ import {
   ScrollView,
   ToastAndroid,
   PermissionsAndroid,
-
   ActivityIndicator,
   DeviceEventEmitter,
   NativeEventEmitter,
   Platform,
-} from "react-native";
-import React, { useContext, useEffect, useMemo, useState, useCallback } from "react";
-import BleManager from "react-native-ble-manager";
-import ThermalPrinterModule from "react-native-thermal-printer";
+} from 'react-native';
+import React, {
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from 'react';
+import BleManager from 'react-native-ble-manager';
+import ThermalPrinterModule from 'react-native-thermal-printer';
 
-import CustomHeader from "../../components/CustomHeader";
-import styles from "../../styles/styles";
-import colors from "../../resources/colors/colors";
-import icons from "../../resources/icons/icons";
-import axios from "axios";
-import { ADDRESSES } from "../../routes/addresses";
-import { loginStorage } from "../../storage/appStorage";
-import { AuthContext } from "../../context/AuthProvider";
+import CustomHeader from '../../components/CustomHeader';
+import styles from '../../styles/styles';
+import colors from '../../resources/colors/colors';
+import icons from '../../resources/icons/icons';
+import axios from 'axios';
+import {ADDRESSES} from '../../routes/addresses';
+import {loginStorage} from '../../storage/appStorage';
+import {AuthContext} from '../../context/AuthProvider';
 
-import headerImg from "../../resources/logo/sss-logo.png";
-import useDashboard from "../../hooks/api/useDashboard";
-
+import headerImg from '../../resources/logo/sss-logo.png';
+import useDashboard from '../../hooks/api/useDashboard';
 
 // import {
 //   ActivityIndicator,
@@ -45,15 +49,11 @@ import useDashboard from "../../hooks/api/useDashboard";
 //   Alert,
 //   StyleSheet,
 // } from "react-native"
-import { BluetoothManager } from "react-native-bluetooth-escpos-printer"
+import {BluetoothManager} from 'react-native-bluetooth-escpos-printer';
 // import { PERMISSIONS, requestMultiple, RESULTS } from "react-native-permissions"
 
-
-
-
-
-export default function ReceiptScreen_Bletooth({ navigation }) {
-  const loginData = JSON.parse(loginStorage.getString("login-data"));
+export default function ReceiptScreen({navigation}) {
+  const loginData = JSON.parse(loginStorage.getString('login-data'));
   const [currentTime, setCurrentTime] = useState(new Date());
   // const { getUserName } = useContext(AuthContext);
 
@@ -67,12 +67,12 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
     getRateDetailsList,
     // getGstList,
     getGeneralSettings,
-    getReceiptSettings
+    getReceiptSettings,
   } = useContext(AuthContext);
 
-  const { total_collection,dev_mod } = generalSettings;
+  const {total_collection, dev_mod} = generalSettings;
 
-  const { getDashboardData } = useDashboard();
+  const {getDashboardData} = useDashboard();
 
   const [vehicles, setVehicles] = useState(() => []);
   const [totalPaidAmt, setPaid_amt] = useState();
@@ -80,29 +80,27 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
   const [totalVehicleOut, setVehicleOut] = useState();
   const [getAdvAmount, setAdvAmount] = useState();
 
-
-
   // operator info
 
-  
   const todayCollectionArray = [
-    { title: "Operator Name", data: userDetails.operator_name },
-    { title: "Total Vehicles In", data: totalVehicleIn || 0 },
-    { title: "Total Vehicles Out", data: totalVehicleOut || 0 },
-    { title: "Total Advance Amount", data: getAdvAmount || 0 },
-   
+    {title: 'Operator Name', data: userDetails.operator_name},
+    {title: 'Total Vehicles In', data: totalVehicleIn || 0},
+    {title: 'Total Vehicles Out', data: totalVehicleOut || 0},
+    {title: 'Total Advance Amount', data: getAdvAmount || 0},
   ];
 
-  if(total_collection=='Y'){
-    todayCollectionArray.push({ title: "Total Collection", data: totalPaidAmt || 0 });
+  if (total_collection == 'Y') {
+    todayCollectionArray.push({
+      title: 'Total Collection',
+      data: totalPaidAmt || 0,
+    });
   }
 
-
   useEffect(() => {
-    dashboardData()
-  }, [])
+    dashboardData();
+  }, []);
 
- // async function checkLocationEnabled() {
+  // async function checkLocationEnabled() {
   //   try {
   //     const granted = await PermissionsAndroid.request(
   //       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -134,18 +132,15 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
   //   }
   // }
 
-// get Dashboard Data
+  // get Dashboard Data
   const dashboardData = async () => {
     let resData = await getDashboardData(loginData.user.userdata.msg[0].id);
     // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', resData?.data.advance_amt.msg[0].advance_amt, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-    setPaid_amt(resData?.data?.paid_amt?.msg[0]?.paid_amt)
-    setVehicleIn(resData?.data?.vehicle_in?.msg[0]?.vehicle_in)
-    setVehicleOut(resData?.data?.vehicle_out?.msg[0]?.vehicle_out)
-    setAdvAmount(resData?.data?.advance_amt?.msg[0]?.advance_amt)
-  }
-
-
-
+    setPaid_amt(resData?.data?.paid_amt?.msg[0]?.paid_amt);
+    setVehicleIn(resData?.data?.vehicle_in?.msg[0]?.vehicle_in);
+    setVehicleOut(resData?.data?.vehicle_out?.msg[0]?.vehicle_out);
+    setAdvAmount(resData?.data?.advance_amt?.msg[0]?.advance_amt);
+  };
 
   // get vehicles list function
   const getVehicles = async () => {
@@ -163,29 +158,27 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
         setVehicles(res.data.data.msg);
       })
       .catch(err => {
-        console.log("ERRR - getVehicles", err);
+        console.log('ERRR - getVehicles', err);
       });
   };
 
-
   // get vehicle list
   useMemo(() => {
-    console.log("Effect - getVehicles Called - ReceiptScreen");
+    console.log('Effect - getVehicles Called - ReceiptScreen');
     getVehicles();
   }, []);
-
 
   // get generalSettings and receiptSettings
   useMemo(() => {
     console.log(
-      "Effect - getGeneralSettings, getReceiptSettings Called - ReceiptScreen",
+      'Effect - getGeneralSettings, getReceiptSettings Called - ReceiptScreen',
     );
     getGeneralSettings();
     getReceiptSettings();
   }, []);
 
   const handleNavigation = async props => {
-    navigation.navigate("create_receipt", {
+    navigation.navigate('create_receipt', {
       type: props.vehicle_name,
       id: props.vehicle_id,
       // adv: props.adv,
@@ -199,15 +192,37 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
     });
   };
 
+  // /////////////////// Test Print
+  // const printReceiptTest = async () => {
+  //   let text =
+  //     `[C]ESTIMATE\n` +
+  //     `[C]=============================\n` +
+  //     `[L]DATE[R]${new Date().toLocaleDateString('en-GB')}\n` +
+  //     `[C]=============================\n` +
+  //     `[L]Item[C]Qty[R]Amt\n` +
+  //     `[C]=============================\n`;
+  //   text +=
+  //     `[C]=============================\n` + `[C]============X============\n`;
 
+  //   // navigation.dispatch(
+  //   //   CommonActions.navigate({
+  //   //     name: 'PrintTemplateScreen',
+  //   //     params: {
+  //   //       textData: text,
+  //   //     },
+  //   //   }),
+  //   // );
 
-  
+  //   navigation.navigate('PrintTemplateScreen', {
+  //     textData: text,
+  //   });
+  // };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{flex: 1}}>
       <CustomHeader title="RECEIPT" />
       {/* today total receipt */}
-      <Text style={styles.title}>Today`s Collection</Text>
+      <Text style={styles.title}>Today's Collection</Text>
       <Text
         style={{
           ...styles.title,
@@ -248,6 +263,11 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
         </TouchableOpacity>
         {/* <TouchableOpacity
           style={otherStyle.print_action_button}
+          onPress={async () => await printReceiptTest()}>
+          <Text>Test Print</Text>
+        </TouchableOpacity> */}
+        {/* <TouchableOpacity
+          style={otherStyle.print_action_button}
           onPress={() => console.log("======handleSamplePrintReceipt======")}>
           {icons.arrowUp}
         </TouchableOpacity> */}
@@ -286,7 +306,6 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
         </ScrollView>
       )} */}
 
-
       {/* vehicle list  */}
       <ScrollView horizontal={true} style={otherStyle.vehicle_container}>
         {vehicles &&
@@ -295,7 +314,7 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
               key={props.vehicle_id}
               style={otherStyle.vehicle}
               onPress={() => {
-                console.log("handleNavigation(props)");
+                console.log('handleNavigation(props)');
                 handleNavigation(props);
               }}>
               {icons.dynamicvechicleIcon(props.vehicle_icon)}
@@ -309,18 +328,18 @@ export default function ReceiptScreen_Bletooth({ navigation }) {
 
 const otherStyle = StyleSheet.create({
   today_collection_data: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     padding: PixelRatio.roundToNearestPixel(10),
   },
   data: {
-    fontWeight: "400",
+    fontWeight: '400',
     color: colors.black,
     fontSize: PixelRatio.roundToNearestPixel(20),
   },
   print_container: {
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
     // margin: -6
   },
   print_action_button: {
@@ -329,24 +348,24 @@ const otherStyle = StyleSheet.create({
   vehicle: {
     margin: 5,
     borderWidth: 1,
-    alignSelf: "center",
+    alignSelf: 'center',
     paddingHorizontal: PixelRatio.roundToNearestPixel(20),
     borderRadius: PixelRatio.roundToNearestPixel(10),
   },
   vehicle_container: {
     // flex: 1,
-    flexDirection: "row",
+    flexDirection: 'row',
     // justifyContent: "space-evenly",
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     // width: '100%',
     marginBottom: PixelRatio.roundToNearestPixel(5),
     elevation: 10,
   },
   vehicle_name: {
-    alignSelf: "center",
+    alignSelf: 'center',
     color: colors.black,
-    fontWeight: "500",
+    fontWeight: '500',
     marginTop: PixelRatio.roundToNearestPixel(-10),
     marginBottom: PixelRatio.roundToNearestPixel(5),
   },
