@@ -1,9 +1,13 @@
-import { MMKV } from "react-native-mmkv";
+import {MMKV} from 'react-native-mmkv';
 
 export const loginStorage = new MMKV({
-  id: "login-store",
+  id: 'login-store',
 });
 
 export const appStorage = new MMKV({
-  id: "app-storage",
+  id: 'app-storage',
+});
+
+export const ezetapStorage = new MMKV({
+  id: 'ezetap-initialization-json',
 });

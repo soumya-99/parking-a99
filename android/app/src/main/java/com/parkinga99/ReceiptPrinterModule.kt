@@ -18,18 +18,24 @@ import java.io.File
 
 class ReceiptPrinterModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
+    // Existing request codes
     private val REQUEST_CODE_INITIALIZE = 10001
     private val REQUEST_CODE_PRINT_BITMAP = 10029
+
+    // New request codes from EzeConstants
+    private val REQUEST_CODE_PAY = 1019
+    private val REQUEST_CODE_PREPARE_DEVICE = 1002
 
     private var callback: Callback? = null
 
     init {
         reactContext.addActivityEventListener(object : BaseActivityEventListener() {
             override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
-                if (requestCode == REQUEST_CODE_INITIALIZE) {
-                    handleInitializeResult(resultCode, data)
-                } else if (requestCode == REQUEST_CODE_PRINT_BITMAP) {
-                    handlePrintResult(resultCode, data)
+                when (requestCode) {
+                    REQUEST_CODE_INITIALIZE -> handleInitializeResult(resultCode, data)
+                    REQUEST_CODE_PRINT_BITMAP -> handlePrintResult(resultCode, data)
+                    REQUEST_CODE_PAY -> handlePayResult(resultCode, data)
+                    REQUEST_CODE_PREPARE_DEVICE -> handlePrepareDeviceResult(resultCode, data)
                 }
             }
         })
@@ -52,15 +58,6 @@ class ReceiptPrinterModule(reactContext: ReactApplicationContext) : ReactContext
                 put("appMode", "DEMO")
                 put("captureSignature", false)
                 put("prepareDevice", false)
-                /////////////////////////////////////////////////
-                // put("demoAppKey", "8b94d199-d50e-466b-9471-126ba33c0cdf")
-                // put("prodAppKey", "8b94d199-d50e-466b-9471-126ba33c0cdf")
-                // put("merchantName", "SYNERGIC_SOFTEK_SOLUT_SBI")
-                // put("userName", "2115350300")
-                // put("currencyCode", "INR")
-                // put("appMode", "PROD")
-                // put("captureSignature", false)
-                // put("prepareDevice", false)
             }
             this.callback = callback
             EzeAPI.initialize(activity, REQUEST_CODE_INITIALIZE, jsonRequest)
@@ -74,7 +71,7 @@ class ReceiptPrinterModule(reactContext: ReactApplicationContext) : ReactContext
             try {
                 val response = JSONObject(data.getStringExtra("response")!!)
                 if (resultCode == Activity.RESULT_OK && response.has("result")) {
-                    callback?.invoke("Initialization successful")
+                    callback?.invoke(response.toString())
                 } else if (resultCode == Activity.RESULT_CANCELED && response.has("error")) {
                     val error = response.getJSONObject("error")
                     val errorCode = error.getString("code")
@@ -97,15 +94,12 @@ class ReceiptPrinterModule(reactContext: ReactApplicationContext) : ReactContext
             val jsonImageObj = JSONObject()
 
             val encodedImageData = getEncoded64ImageStringFromBitmap(bitmap)
-
-            // Building Image Object for small images using base64
             jsonImageObj.put("imageData", encodedImageData)
             jsonImageObj.put("imageType", "JPEG")
             jsonImageObj.put("height", "")  // optional
             jsonImageObj.put("weight", "")  // optional
 
             jsonRequest.put("image", jsonImageObj)
-
             this.callback = callback
             EzeAPI.printBitmap(activity, REQUEST_CODE_PRINT_BITMAP, jsonRequest)
         } else {
@@ -113,25 +107,17 @@ class ReceiptPrinterModule(reactContext: ReactApplicationContext) : ReactContext
         }
     }
 
-    /**
-     * New method for printing large or long images via internal storage file.
-     * @param filePath The public path of the saved image.
-     */
     @ReactMethod
     fun printLargeReceipt(filePath: String, callback: Callback) {
         val activity = currentActivity
         if (activity != null) {
-            // Optionally, you may verify that the file exists.
             val file = File(filePath)
             if (!file.exists()) {
                 callback.invoke("File not found at $filePath")
                 return
             }
-
             val jsonRequest = JSONObject()
             val jsonImageObj = JSONObject()
-
-            // Build the image object using file path instead of Base64 data.
             jsonImageObj.put("imageData", filePath)
             jsonImageObj.put("imageType", "file")
             jsonImageObj.put("height", "")  // optional
@@ -145,18 +131,67 @@ class ReceiptPrinterModule(reactContext: ReactApplicationContext) : ReactContext
         }
     }
 
+    // --- New Methods Inserted ---
+
+    @ReactMethod
+    fun pay(jsonString: String, callback: Callback) {
+        val activity = currentActivity
+        if (activity != null) {
+            try {
+                val jsonRequest = JSONObject(jsonString)
+                this.callback = callback
+                EzeAPI.pay(activity, REQUEST_CODE_PAY, jsonRequest)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                callback.invoke("Exception: ${e.message}")
+            }
+        } else {
+            callback.invoke("Activity is null")
+        }
+    }
+
+    @ReactMethod
+    fun prepareDevice(callback: Callback) {
+        val activity = currentActivity
+        if (activity != null) {
+            this.callback = callback
+            EzeAPI.prepareDevice(activity, REQUEST_CODE_PREPARE_DEVICE)
+        } else {
+            callback.invoke("Activity is null")
+        }
+    }
+
+    // --- Handlers for New Methods ---
+    private fun handlePayResult(resultCode: Int, data: Intent?) {
+        if (data != null && data.hasExtra("response")) {
+            try {
+                // Return the full response as a JSON string
+                val response = JSONObject(data.getStringExtra("response")!!)
+                callback?.invoke(response.toString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                callback?.invoke("Exception: ${e.message}")
+            }
+        }
+    }
+
+    private fun handlePrepareDeviceResult(resultCode: Int, data: Intent?) {
+        if (data != null && data.hasExtra("response")) {
+            try {
+                val response = JSONObject(data.getStringExtra("response")!!)
+                callback?.invoke(response.toString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                callback?.invoke("Exception: ${e.message}")
+            }
+        }
+    }
+
     private fun handlePrintResult(resultCode: Int, data: Intent?) {
         if (data != null && data.hasExtra("response")) {
             try {
                 val response = JSONObject(data.getStringExtra("response")!!)
-                if (resultCode == Activity.RESULT_OK && response.has("result")) {
-                    callback?.invoke("Print successful")
-                } else if (resultCode == Activity.RESULT_CANCELED && response.has("error")) {
-                    val error = response.getJSONObject("error")
-                    val errorCode = error.getString("code")
-                    val errorMessage = error.getString("message")
-                    callback?.invoke("Print failed: $errorCode - $errorMessage")
-                }
+                callback?.invoke(response.toString())
             } catch (e: Exception) {
                 e.printStackTrace()
                 callback?.invoke("Exception: ${e.message}")

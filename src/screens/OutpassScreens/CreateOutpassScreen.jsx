@@ -40,8 +40,8 @@ const CreateOutpassScreen = ({route, navigation}) => {
   const [isAvailableYet, setisAvailableYet] = useState(() => false);
   const [getBlePermission, setBlePermission] = useState();
   const loginData = JSON.parse(loginStorage.getString('login-data'));
-  // const device_Type_Check = loginData.user.userdata.msg[0].device_type;
-  const device_Type_Check = 'P';
+  const device_Type_Check = loginData.user.userdata.msg[0].device_type;
+  // const device_Type_Check = 'P';
 
   const [radioState, setRadioState] = useState(false);
   const [getPayMode, setPayMode] = useState('C');

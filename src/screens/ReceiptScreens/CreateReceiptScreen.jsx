@@ -8,6 +8,7 @@ import {
   ToastAndroid,
   PermissionsAndroid,
   Alert,
+  NativeModules,
 } from 'react-native';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 
@@ -24,7 +25,7 @@ import CustomButton from '../../components/CustomButton';
 import {InternetStatusContext} from '../../../App';
 import {AuthContext} from '../../context/AuthProvider';
 import axios from 'axios';
-import {loginStorage} from '../../storage/appStorage';
+import {ezetapStorage, loginStorage} from '../../storage/appStorage';
 import {ADDRESSES} from '../../routes/addresses';
 import useCarIn from '../../hooks/api/useCarIn';
 import useGstSettings from '../../hooks/api/useGstSettings';
@@ -34,6 +35,7 @@ import gstCalculatorReport from '../../hooks/gstCalculatorReport';
 
 // For Scanner
 import QRCode from 'react-native-qrcode-svg';
+import RadioButton from '../../components/RadioButton';
 
 // import React, { useState, useEffect, useContext } from "react";
 
@@ -65,15 +67,23 @@ const CreateReceiptScreen = ({navigation, route}) => {
   const loginData = JSON.parse(loginStorage.getString('login-data'));
   const [getBlePermission, setBlePermission] = useState();
   const [getdevice_type, setdevice_type] = useState();
-  // const device_Type_Check = loginData.user.userdata.msg[0].device_type;
-  const device_Type_Check = 'P';
+  const device_Type_Check = loginData.user.userdata.msg[0].device_type;
+  // const device_Type_Check = 'P';
 
-  // const [radioState, setRadioState] = useState(false);
-  // const [getPayMode, setPayMode] = useState('C');
-  // const radioOptions = [
-  //   { label: 'Cash: ', value: 'C' },
-  //   { label: 'UPI: ', value: 'U' },
-  // ];
+  const [radioState, setRadioState] = useState(false);
+  const [getPayMode, setPayMode] = useState('C');
+  const radioOptions = [
+    {label: 'Cash: ', value: 'C'},
+    {label: 'UPI: ', value: 'U'},
+  ];
+  const {ReceiptPrinter} = NativeModules;
+  var tnxResponse;
+
+  const handleRadioSelect = value => {
+    setRadioState(!radioState);
+
+    setPayMode(value);
+  };
 
   const getVehicleRateFixedByVehicleId = async (devMode, id) => {
     const loginData = JSON.parse(loginStorage.getString('login-data'));
@@ -811,6 +821,54 @@ const CreateReceiptScreen = ({navigation, route}) => {
     }
   };
 
+  // ////////////////////////////////
+  // Integrating UPI - Razorpay Payment Gateway with SDK
+
+  const handleRazorpayClient = async () => {
+    const paymentRequest = {
+      username: '9903044748',
+      amount: 800,
+      externalRefNumber: '',
+    };
+
+    const jsonString = JSON.stringify(paymentRequest);
+
+    try {
+      const res = await new Promise((resolve, reject) => {
+        ReceiptPrinter.pay(jsonString, result => {
+          console.log('Payment response:', result);
+          // Attempt to parse the result as JSON
+          try {
+            const parsedResult = JSON.parse(result);
+            // Check if the response indicates success (you can adjust this check as needed)
+            if (parsedResult.result || parsedResult.transaction_id) {
+              resolve(parsedResult);
+            } else {
+              reject(parsedResult);
+            }
+          } catch (e) {
+            reject(result);
+          }
+        });
+      });
+
+      console.log('Payment transaction completed:', res);
+      return res;
+    } catch (err) {
+      console.error('Payment error:', err);
+      throw err;
+    }
+  };
+
+  const init = async () => {
+    try {
+      const res = await handleRazorpayClient();
+      console.log('Full transaction response object:', res);
+    } catch (error) {
+      console.error('Initialization or payment error:', error);
+    }
+  };
+
   return (
     <View>
       {/* if loading state is true render loading */}
@@ -919,6 +977,19 @@ const CreateReceiptScreen = ({navigation, route}) => {
             </View>
           )}
 
+          <View style={styles.radioButton_new}>
+            {radioOptions.map(option => (
+              <RadioButton
+                key={option.value}
+                label={option.label}
+                // labelStyle={styles.radioButtonText} // Apply text style
+                selected={option.value === getPayMode}
+                onPress={() => handleRadioSelect(option.value)}
+                customFont={20}
+              />
+            ))}
+          </View>
+
           {/* ......... vehicle Advance Amount .......... */}
 
           {/*............... action buttons ......... */}
@@ -941,14 +1012,24 @@ const CreateReceiptScreen = ({navigation, route}) => {
             {/* Print Receipt Action Button */}
             <CustomButton.GoButton
               title={'Print Receipt'}
-              onAction={() => handleCreateReceipt()}
+              onAction={() => {
+                getPayMode === 'C' ? handleCreateReceipt() : init();
+                // handleCreateReceipt()
+              }}
               style={{flex: 1, marginLeft: normalize(8)}}
             />
 
             {/* <CustomButton.GoButton
-              title={"Test Printer"}
-              onAction={printreciept} 
-              style={{ flex: 1, marginLeft: normalize(8) }}
+              title={'Test Payment'}
+              onAction={async () =>
+                await init().then(() => {
+                  console.log(
+                    'TRANSACTION RES DATA================',
+                    tnxResponse,
+                  );
+                })
+              }
+              style={{flex: 1, marginLeft: normalize(8)}}
             /> */}
 
             {/* <Button title="Test Printer" onPress={printreciept} /> */}
@@ -978,6 +1059,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: PixelRatio.roundToNearestPixel(15),
     marginLeft: normalize(10),
+  },
+  radioButton_new: {
+    flexDirection: 'row',
+    lineHeight: 24,
+    justifyContent: 'space-between',
+    marginTop: 15,
+    paddingLeft: 15,
+    paddingRight: 15,
+    display: 'inline',
   },
   vehicle_text: {
     marginLeft: PixelRatio.roundToNearestPixel(15),
